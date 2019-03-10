@@ -5,7 +5,7 @@ Important Notes
 Description
 Project for the final part of the API course at Milano Politecnico.
 
-# Making of a Nondeterministic Turing Machine Simulator.
+# Making of a Nondeterministic Turing Machine Simulator
 
 # License
 Before 13 Oct 2018: All Right Reserved
