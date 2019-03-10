@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//dimensioni variabili
+//Variable Chunk Size
 #define CHUNK_SIZE 7
 
 /**
@@ -15,12 +15,12 @@
  * Global values
 */
 
-//Variabili di verifica accettazione
+//Aceptance variables
 int unknown = 0;
 int notAccepted = 0;
 
 /**
- * parser,accettazione e maxStep variabili globali
+ * parser, acceptance, global variables
  */
 char* smallBuffer;
 long maxStep = 0;
@@ -46,7 +46,7 @@ char* inputTape;
 size_t tapeLength = 0;
 size_t totalChunk = 0;
 
-//struct Macchina di Turing
+//struct MT
 typedef struct TuringMachines {
     size_t currentMaxChunk;
     size_t machineTapeLength;
@@ -71,7 +71,7 @@ turingMachine* currentExecutingMachine;
 
 int nextFound = 0;
 
-//solo per non determinismo
+//Only for not determinism
 turingMachine* fatherMachine = NULL;
 int fatherTransition;
 
@@ -86,12 +86,8 @@ turingMachine* lastSonCreated = NULL;
 int totalSonCreated = 0;
 
 /**
- * Crea la hashmap di puntatori alle transizioni
- * Scorro l'array di transizioni salvando i puntatori in array ordinandoli per inState; es:
- * in hashmap [0] ho un array di puntatori a tutte le struct che hanno inState = 0
- *
- * transition counter mi tiene conto di quante transizioni con un determinato inState ho (tutti gli inState hanno almeno
- * una transizione, non ho "buchi"
+ * Creates Pointers HshMap
+ * Map is ordered by InputState
  */
 static inline void hashMapCreator(){
 
@@ -113,8 +109,7 @@ static inline void hashMapCreator(){
 }
 
 /**
- * Setta prototipo della prima macchina
- * NON E MALLOCATA
+ * Not Malloc MT Prototype
  */
 void beginner() {
 
@@ -176,8 +171,7 @@ static inline void endTapeCleaner(){
 
 /**
  * Final Cleaner
- * Alla fine di tutti i nastri setta max a 0, libera l'array di acc, libera array di struct e hashmap, setta numero
- * acc a 0
+ * At the end of the execution of a tape reset all variables and free unused memory
  */
 static inline void finalCleaner() {
 
@@ -194,7 +188,7 @@ static inline void finalCleaner() {
     numberAcceptanceStatus = -1;
 
 
-    //libero tutti gli array di puntatori a struct, poi libero la hashmap
+    //free the hashmap
     for (int i = 0; i < higherTransitionInStatus; i++) {
         free(hashMap[i]);
     }
@@ -202,7 +196,7 @@ static inline void finalCleaner() {
 }
 
 /**
- * Copertura totale casistica macchine da eliminare
+ * Machine eraser
  */
 
 static  inline void machineEraser(){
@@ -248,10 +242,8 @@ static  inline void machineEraser(){
 }
 
 /**
- * Unknown verifier con controllo loop integrato
- * verifica se ho una tr che va in loop (casi specifici derivati da analisi dei casi di test pubblici) oppure se
- * sono arrivato al maxStep consentito.
- * Se ho una di ste 3 condizioni elimino la macchina e incremento il flag unknown
+ * Unknown verifier 
+ * Verifies if machine goes in loop or passes the max step
  */
 
 static inline int unknownVerifier() {
@@ -272,13 +264,7 @@ static inline int unknownVerifier() {
     }
 }
 /**
- * Questa funzione prende una macchina con già la nuova tr innestata (avrò già controllato se quella tr è di
- * accettazione)
- * sovrascrive il nastro
- * fa la move
- * incrementa current step
- * se current step = max elimino la macchina
- * in ogni caso current machine = currentMachine. next
+ * Core of the machine: overwrite the character, move the head on the tape and verifies if the next step is 1,0,U
  */
 static inline void run() {
 
@@ -364,7 +350,7 @@ static inline int manager(){
                 }
             }
 
-            //NON ACCETTO == se non ho trovato nessuna tr valida
+            //No valid transition
             if(nextFound == 0){
                 notAccepted++;
 
@@ -375,19 +361,18 @@ static inline int manager(){
                 toDelete = NULL;
             }
 
-                //DETERMINISTICO
+                //Deterministic
             else if (nextFound == 1){
-                //la tr l'ho già copiata dentro, ergo faccio la Move
                 run();
                 unknownVerifier();
             }
 
-            //NON DETERMINISTICO
+            //Not Deterministic chase
             else if (nextFound > 1) {
 
                 fatherMachine = currentExecutingMachine;
 
-                //prima creo ed esegui i figli, po il padre, cosí il nastro padre non é corrotto
+                //before I create and execute sons, so the father is the same, after I do COW on the father
                 for (int i = 0; i < transitionsCounter[fatherTransition] ; i++) {
 
                     if(hashMap[fatherTransition][i]->read == fatherMachine->tape[fatherMachine->tapeHead]) {
@@ -462,7 +447,7 @@ static inline int manager(){
             nextFound = 0;
         }
 
-        //se ho finito di scorrere le macchine del passo precedente
+        //when I've exausted father list
         if(firstSonCreated != NULL){
             tail->next = firstSonCreated;
             firstSonCreated->previous = tail;
@@ -500,10 +485,6 @@ int main() {
     scanf("%ms", &smallBuffer);
     if (strcmp(smallBuffer, "tr\n") != 0) {
 
-        /**
-         * Assegno i valori letti dal buffer ai temporanei, assegno i valori temporanei alla struct,
-         * incremento il numero di transizioni totali
-         */
         while (scanf("%d %c %c %c %d", &inTmp, &readTmp, &writeTmp, &moveTmp, &outTmp)) {
             numberTotalTransitions++;
 
@@ -523,7 +504,7 @@ int main() {
     hashMapCreator();
 
     /**
-     * Salvo gli stati di accettazione
+     * Saving acceptance status
      */
     scanf("%ms", &smallBuffer);
     if (strcmp(smallBuffer, "acc\n") != 0) {
@@ -539,7 +520,7 @@ int main() {
     free(smallBuffer);
 
     /**
-     * Salvo max step
+     * Saving max step
      */
     scanf("%ms", &smallBuffer);
     if (strcmp(smallBuffer, "max\n") != 0) {
@@ -547,7 +528,7 @@ int main() {
     }
 
     /**
-    * Ora mi preparo a leggere i nastri 1 per volta e a fare cose
+    * reading Tapes
     */
 
     scanf("%s", smallBuffer);
@@ -574,7 +555,7 @@ int main() {
 
             beginner();
 
-            //stampo i risultati del nastro, errori nella cancellazione
+            //Printing Tapes
             result = manager();
 
             if (result == 1) {
