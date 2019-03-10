@@ -60,4 +60,4 @@ Those are two example machine useful for testing purposes.
 In /res/results there are the results of the execution of this program on the server. In the same folder you can find the public and private test cases released after the final deadline of the project.
 
 # Private Test
-Here we can find private test reliased after the end of the project.
+Here we can find private test released after the end of the project.
